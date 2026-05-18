@@ -1097,7 +1097,10 @@
             </div>
             <div class="contact-grid">
                 <div class="contact-form">
-                    <form id="bookingForm" onsubmit="handleSubmit(event)">
+                    <form id="bookingForm" action="https://api.web3forms.com/submit" method="POST" onsubmit="handleSubmit(event)">
+                        <input type="hidden" name="access_key" value="0763a1f3-dc59-46bb-a898-a7b4ed562946">
+                        <input type="hidden" name="subject" value="Ny bokningsförfrågan – DriveFix">
+                        <input type="hidden" name="from_name" value="DriveFix webbplats">
                         <div class="form-group">
                             <label for="name">Namn</label>
                             <input type="text" id="name" name="name" placeholder="Ditt namn" required autocomplete="name">
@@ -1105,6 +1108,10 @@
                         <div class="form-group">
                             <label for="phone">Telefon</label>
                             <input type="tel" id="phone" name="phone" placeholder="07X-XXX XX XX" required autocomplete="tel">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">E-post</label>
+                            <input type="email" id="email" name="email" placeholder="din@epost.se" required autocomplete="email">
                         </div>
                         <div class="form-group">
                             <label for="car">Bilmodell & årsmodell</label>
@@ -1208,12 +1215,34 @@
             }
         });
 
-        function handleSubmit(e) {
+        async function handleSubmit(e) {
             e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            alert('Tack för din förfrågan, ' + data.name + '! Vi hör av oss inom 30 minuter.');
-            e.target.reset();
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Skickar...';
+
+            try {
+                const response = await fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const name = form.elements.name.value;
+                    alert('Tack för din förfrågan, ' + name + '! Vi hör av oss inom 30 minuter.');
+                    form.reset();
+                } else {
+                    alert('Något gick fel. Försök igen eller ring oss på 076 93 444 61.');
+                }
+            } catch {
+                alert('Kunde inte skicka formuläret. Kontrollera din anslutning eller ring oss på 076 93 444 61.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         }
 
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
